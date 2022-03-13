@@ -52,34 +52,35 @@
                 const pdfDoc = await PDFLib.PDFDocument.create();
                 const page = pdfDoc.addPage([350, 400]);
                 page.moveTo(110, 200);
-                page.drawText('Hello World!');
-                const pdfDataUri = await pdfDoc.save(); //.saveAsBase64({ dataUri: true });
+                page.drawText('Hello ' + String(name) + "!");
+                const pdfData = await pdfDoc.saveAsBase64();
 
-                var bytes = new Uint8Array(pdfDataUri); // pass your byte response to this constructor
-                var blob = new Blob([bytes], {type: "application/pdf"});// change resultByte to bytes
+                // var bytes = new Uint8Array(pdfDataUri); // pass your byte response to this constructor
+                // var blob = new Blob([bytes], {type: "application/pdf"});// change resultByte to bytes
                 // var link=document.createElement('a');
                 // link.href=window.URL.createObjectURL(blob);
                 // link.download="report.pdf";
                 // link.click();
 
+                const URICode = String("ARP000002"); // TODO: create a unique number here!
+
                 const octokit = new Octokit({
-                    auth: "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"
+                    auth: "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"
                 });
                 
-                octokit.repos.createOrUpdateFileContents({
+                octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
                     // replace the owner and email with your own details
                     owner: "catFurr",
                     repo: "helloworld",
-                    path: "tests/ARP000001/report.pdf",
+                    path: "tests/"+ URICode +"/report.pdf",
                     message: "new file",
-                    content: blob
+                    content: pdfData,
                 })
                 .then((data) => {
-                    console.log(data);
-                    alert("Success!!");
+                    alert("https://catfurr.github.io/helloworld/tests/"+ URICode +"/report.pdf");
                 })
                 .catch((err) => {
-                    console.log(String(err));
+                    alert("Failed to create pdf :(");
                 });
             });
 
