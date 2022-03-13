@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <script src="https://unpkg.com/pdf-lib"></script>
+        <title>
+            Sample PDF DApp
+        </title>
+    </head>
+    <body>
+        <h1>
+            Generate your own PDF!
+        </h1>
+
+        <form id="form">
+            <label for="username">Your Name</label>
+            <input type="text" id="username" name="username" />
+        </br>
+
+            <label for="userdob">Your Date of Birth</label>
+            <input type="date" id="userdob" name="userdob" />
+        </br>
+
+            <label for="favnum">Your favorite number</label>
+            <input type="number" id="favnum" name="favnum" />
+        </br>
+
+            <button type="submit">Download</button>
+        </form>
+
+        <script type="text/javascript" src="web3.min.js"></script>
+        <script type="module">
+            import { Octokit } from "https://cdn.skypack.dev/@octokit/rest";
+            const form = document.getElementById("form");
+
+            const NAME_REQUIRED = "Please enter your name";
+            const DOB_REQUIRED = "Please enter your Date of Birth";
+            const NUM_REQUIRED = "Please enter your Favorite Number";
+
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                let name = form.elements['username'].value;
+                let dob = form.elements['userdob'].value;
+                let num = form.elements['favnum'].value;
+
+                if (!name || !dob || !num) {
+                    alert("Please enter valid data.");
+                    return;
+                }
+
+                const pdfDoc = await PDFLib.PDFDocument.create();
+                const page = pdfDoc.addPage([350, 400]);
+                page.moveTo(110, 200);
+                page.drawText('Hello World!');
+                const pdfDataUri = await pdfDoc.save(); //.saveAsBase64({ dataUri: true });
+
+                var bytes = new Uint8Array(pdfDataUri); // pass your byte response to this constructor
+                var blob = new Blob([bytes], {type: "application/pdf"});// change resultByte to bytes
+                // var link=document.createElement('a');
+                // link.href=window.URL.createObjectURL(blob);
+                // link.download="report.pdf";
+                // link.click();
+
+                const octokit = new Octokit({
+                    auth: "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"
+                });
+                
+                octokit.repos.createOrUpdateFileContents({
+                    // replace the owner and email with your own details
+                    owner: "catFurr",
+                    repo: "helloworld",
+                    path: "tests/ARP000001/report.pdf",
+                    message: "new file",
+                    content: blob
+                })
+                .then((data) => {
+                    console.log(data);
+                    alert("Success!!");
+                })
+                .catch((err) => {
+                    console.log(String(err));
+                });
+            });
+
+            const url = "https://polygon-mumbai.g.alchemy.com/v2/tYiIQzsm0d1zAsKFAP4erQ1kedgQ85NW";
+            const contractaddress = "0x6EB7bDF1A772CCfb9aF0c7F33827A74b2E1A1eB8";
+            const abi = [{"inputs":[{"internalType":"string","name":"initMessage","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"string","name":"oldStr","type":"string"},{"indexed":false,"internalType":"string","name":"newStr","type":"string"}],"name":"UpdatedMessages","type":"event"},{"inputs":[],"name":"message","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"newMessage","type":"string"}],"name":"update","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+
+            function editPDF() {
+                const web3 = new Web3(url);
+                const contract = new web3.eth.Contract(abi, contractaddress);
+                contract.methods.message().call().then((res) => { console.log(res) });
+            }
+        </script>
+    </body>
+</html>
